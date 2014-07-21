@@ -100,13 +100,15 @@ def get_messages(conversation):
 inbox = g.get_connections("me", "inbox", limit=5000) 
 
 target = None
+found = False 
 
 for conversation in inbox["data"]: 
 	to = conversation["to"]["data"] 
 	for i in to: 
-		if i["id"] == person or i["name"] == person: 
+		if (i["id"] == person or i["name"] == person) and not found: 
 			print i["name"] +  " found"
 			target = conversation 
+			found = True
 
 
 conversation = target["comments"] 
