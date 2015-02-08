@@ -5,16 +5,16 @@ import time
 
 
 if sys.argv[1] in ["help", "--help", "-h", "-help"]:
-	print """Usage: 
+	print("""Usage: 
 	archiver token log personid outputfile		Output whole log into file 
 	archiver token show-conversations		Show all conversations and person ids 
-"""
+""")
 
 token = sys.argv[1] 
 action = sys.argv[2]
 
 if not action in ["log", "show-conversations"]:
-	print "Wrong option. Use archiver --help for more information"
+	print("Wrong option. Use archiver --help for more information")
 
 
 g = facebook.GraphAPI(token) 
@@ -25,8 +25,8 @@ if action == "show-conversations":
 	for conversation in inbox["data"]: 
 		to = conversation["to"]["data"] 
 		for i in to: 
-			print i["name"] + "(" + i["id"] + ")",
-		print
+			print(i["name"] + "(" + i["id"] + ")", end=' ')
+		print()
 	exit(0)
 
 
@@ -62,8 +62,8 @@ def get_next_page(conversation):
 	"""
 	next_url = conversation["paging"]["next"]
 	res = facebook.requests.request("GET", next_url).json()
-	while "error" in res.keys() and res["error"]["code"] == 613: 
-		print "Delaying..." 
+	while "error" in list(res.keys()) and res["error"]["code"] == 613: 
+		print("Delaying...") 
 		time.sleep(180)
 		res = facebook.requests.request("GET", next_url).json()
 	return res
@@ -78,8 +78,8 @@ def get_prev_page(conversation):
 	"""
 	next_url = conversation["paging"]["previous"]
 	res = facebook.requests.request("GET", next_url).json()
-	while "error" in res.keys() and res["error"]["code"] == 613: 
-		print "Delaying..." 
+	while "error" in list(res.keys()) and res["error"]["code"] == 613: 
+		print("Delaying...") 
 		time.sleep(180)
 		res = facebook.requests.request("GET", next_url).json()
 	return res
@@ -106,29 +106,29 @@ for conversation in inbox["data"]:
 	to = conversation["to"]["data"] 
 	for i in to: 
 		if (i["id"] == person or i["name"] == person) and not found: 
-			print i["name"] +  " found"
+			print(i["name"] +  " found")
 			target = conversation 
 			found = True
 
 
 conversation = target["comments"] 
 new = conversation 
-print "Getting prev pages"
+print("Getting prev pages")
 
 start = time.time()
 
 msgs = [] 
 
-while "paging" in new.keys():
+while "paging" in list(new.keys()):
 	conversation = new
 	new = get_next_page(new)
 	page = get_messages(conversation)
 	msgs = page + msgs
-	print msgs[0].date_string
+	print(msgs[0].date_string)
  
 
-print "Transfered to start in " + str(time.time() - start ) + " seconds" 
-print "Collecting messages" 
+print("Transfered to start in " + str(time.time() - start ) + " seconds") 
+print("Collecting messages") 
 
 time.sleep(10)
 
@@ -144,4 +144,4 @@ output = open(output_filename, "w")
 for m in msgs: 
 	output.write(m.date_string.encode("UTF-8") + " " + m.time_string.encode("UTF-8") + " " + m.sender.encode("UTF-8") + "\t" + m.message.encode("UTF-8") + "\n")
 
-print "Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds"
+print("Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds")
