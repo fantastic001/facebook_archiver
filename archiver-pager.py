@@ -1,130 +1,80 @@
 
-import facebook 
 import sys
 import time
 
+from facebook.me import Me
+from facebook.exceptions import LimitExceededException
 
 if sys.argv[1] in ["help", "--help", "-h", "-help"]:
-	print("""Usage: 
-	archiver token log personid outputfile		Output whole log into file 
-	archiver token show-conversations		Show all conversations and person ids 
+    print("""Usage: 
+    archiver token log personid outputfile          Output whole log into file 
+    archiver token show-conversations               Show all conversations and person ids 
 """)
+    exit(0)
+
+
 
 token = sys.argv[1] 
 action = sys.argv[2]
 
 if not action in ["log", "show-conversations"]:
-	print("Wrong option. Use archiver --help for more information")
+    print("Wrong option. Use archiver --help for more information")
 
 
-g = facebook.GraphAPI(token) 
+me = Me(token)
 
 # show-conversations option 
-if action == "show-conversations": 	
-	inbox = g.get_connections("me", "inbox", limit=5000) 
-	for conversation in inbox["data"]: 
-		to = conversation["to"]["data"] 
-		for i in to: 
-			print(i["name"] + "(" + i["id"] + ")", end=' ')
-		print()
-	exit(0)
+if action == "show-conversations":      
+    inbox = me.get_inbox()
+    for conversation in inbox.get_conversations():
+        print(conversation)
+    exit(0)
 
 
 # log option
 person = sys.argv[3] 
 output_filename = sys.argv[4]
 
-class Message(object): 
-	"""
-	Represents a one message in facebook chat 
-	"""
+inbox = me.get_inbox()
 
-	def __init__(self, data): 
-		"""
-		Initializes object with given data (dictionary with ids of persons, message, creating time etc) 
-		
-		data: dict
-		"""
-		self.date_string = data["created_time"].split("T")[0]
-		self.time_string = data["created_time"].split("T")[1]
-		self.message = data.get("message")
-		if self.message == None: 
-			self.message = ""
-		self.sender = data["from"]["name"] 
-
-def get_next_page(conversation): 
-	"""
-	Returns a new conversation (comments) dictionary with new (next) page 
-
-	conversation: starting page 
-
-	returns: next page
-	"""
-	next_url = conversation["paging"]["next"]
-	res = facebook.requests.request("GET", next_url).json()
-	while "error" in list(res.keys()) and res["error"]["code"] == 613: 
-		print("Delaying...") 
-		time.sleep(180)
-		res = facebook.requests.request("GET", next_url).json()
-	return res
-
-def get_prev_page(conversation): 
-	"""
-	Returns a new conversation (comments) dictionary with new (prev) page 
-
-	conversation: starting page 
-
-	returns: previous page
-	"""
-	next_url = conversation["paging"]["previous"]
-	res = facebook.requests.request("GET", next_url).json()
-	while "error" in list(res.keys()) and res["error"]["code"] == 613: 
-		print("Delaying...") 
-		time.sleep(180)
-		res = facebook.requests.request("GET", next_url).json()
-	return res
-
-def get_messages(conversation): 
-	"""
-	Get messages from conversation 
-
-	conversation: dict object which represents "comments" dictionary in the actual facebook json representation 
-
-	returns: list of Message objects 
-	"""
-	messages = [] 
-	for m in conversation["data"]:
-		messages.append(Message(m))
-	return messages
-
-inbox = g.get_connections("me", "inbox", limit=5000) 
+available_targets = []
+for conversation in inbox.get_conversations():
+    if person in conversation.get_persons():
+        available_targets.append(conversation)
 
 target = None
-found = False 
-
-for conversation in inbox["data"]: 
-	to = conversation["to"]["data"] 
-	for i in to: 
-		if (i["id"] == person or i["name"] == person) and not found: 
-			print(i["name"] +  " found")
-			target = conversation 
-			found = True
-
-
-conversation = target["comments"] 
-new = conversation 
-print("Getting prev pages")
+if len(available_targets) > 1:
+    print("You have multiple choices for target, select one of them by typing desired number:")
+    i = 1
+    for t in available_targets:
+        print(str(i) + ": " + str(t))
+        i += 1
+    selection = input(">>> ")
+    target = available_targets[selection - 1]
+else:
+    if len(available_targets)==0:
+        print("Target not found")
+        exit(1)
+    else:
+        target = available_targets[0]
 
 start = time.time()
 
 msgs = [] 
-
-while "paging" in list(new.keys()):
-	conversation = new
-	new = get_next_page(new)
-	page = get_messages(conversation)
-	msgs = page + msgs
-	print(msgs[0].date_string)
+targets = []
+while target.has_next():
+    new_target = None
+    try:
+        new_target = target.next()
+    except LimitExceededException:
+        print("Delaying some time")
+        time.sleep(100)
+    else:
+        target = new_target
+        new_msgs = target.get_messages()
+        if len(target.get_messages()) > 0:
+            print("Got messages from " + str(new_msgs[0].get_time()))
+        msgs = new_msgs + msgs
  
 
 print("Transfered to start in " + str(time.time() - start ) + " seconds") 
@@ -135,13 +85,13 @@ time.sleep(10)
 start = time.time()
 
 #while "paging" in conversation.keys():
-#	msgs.extend(get_messages(conversation)) 
-#	print conversation
-#	conversation = get_prev_page(conversation) 
+#       msgs.extend(get_messages(conversation)) 
+#       print conversation
+#       conversation = get_prev_page(conversation) 
 
 output = open(output_filename, "w")
 
-for m in msgs: 
-	output.write(m.date_string.encode("UTF-8") + " " + m.time_string.encode("UTF-8") + " " + m.sender.encode("UTF-8") + "\t" + m.message.encode("UTF-8") + "\n")
+for msg in msgs:
+    output.write(msg.get_time().strftime("%Y %m %d %H:%M ") + msg.get_sender() + ": " + msg.get_message() + "\n")
 
 print("Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds")
