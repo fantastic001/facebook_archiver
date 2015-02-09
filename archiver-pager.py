@@ -49,7 +49,7 @@ if len(available_targets) > 1:
     for t in available_targets:
         print(str(i) + ": " + str(t))
         i += 1
-    selection = input(">>> ")
+    selection = int(input(">>> "))
     target = available_targets[selection - 1]
 else:
     if len(available_targets)==0:
