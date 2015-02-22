@@ -25,6 +25,12 @@ class Inbox(object):
         Returns Inbox object as previous page. Facebook does not provide whole inbox at once and uses paging. 
         """
         return Inbox(requests.get(self.data["paging"]["prev"]).json())
+    
+    def has_next(self):
+        return "paging" in self.data and "next" in self.data["paging"]
+
+    def has_prev(self):
+        return "paging" in self.data and "previous" in self.data["paging"]
 
     def get_conversations(self):
         """

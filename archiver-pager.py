@@ -26,8 +26,11 @@ me = Me(token)
 # show-conversations option 
 if action == "show-conversations":      
     inbox = me.get_inbox()
-    for conversation in inbox.get_conversations():
-        print(conversation)
+    while inbox.has_next():
+        for conversation in inbox.get_conversations():
+            print(conversation)
+        inbox = inbox.next()
+
     exit(0)
 
 
@@ -38,9 +41,11 @@ output_filename = sys.argv[4]
 inbox = me.get_inbox()
 
 available_targets = []
-for conversation in inbox.get_conversations():
-    if person in conversation.get_persons():
-        available_targets.append(conversation)
+while inbox.has_next():
+    for conversation in inbox.get_conversations():
+        if person in conversation.get_persons():
+            available_targets.append(conversation)
+    inbox = inbox.next()
 
 target = None
 if len(available_targets) > 1:
