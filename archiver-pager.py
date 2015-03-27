@@ -9,6 +9,7 @@ if sys.argv[1] in ["help", "--help", "-h", "-help"]:
     print("""Usage: 
     archiver token log personid outputfile          Output whole log into file 
     archiver token show-conversations               Show all conversations and person ids 
+    archiver ? get_token                            Get URL for token 
 """)
     exit(0)
 
@@ -17,10 +18,13 @@ if sys.argv[1] in ["help", "--help", "-h", "-help"]:
 token = sys.argv[1] 
 action = sys.argv[2]
 
-if not action in ["log", "show-conversations"]:
+if not action in ["log", "show-conversations", "get_token"]:
     print("Wrong option. Use archiver --help for more information")
 
 
+if action == "get_token" and token == "?":
+    print("Go to %s" % Me.get_token_uri())
+    exit(0)
 me = Me(token)
 
 # show-conversations option 
