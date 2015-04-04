@@ -1,47 +1,46 @@
 
 import sys
 import time
+import argparse
+
 
 from facebook.me import Me
 from facebook.exceptions import LimitExceededException
 
-if sys.argv[1] in ["help", "--help", "-h", "-help"]:
-    print("""Usage: 
-    archiver token log personid outputfile          Output whole log into file 
-    archiver token show-conversations               Show all conversations and person ids 
-    archiver ? get_token                            Get URL for token 
-""")
-    exit(0)
-
-
-
-token = sys.argv[1] 
-action = sys.argv[2]
-
-if not action in ["log", "show-conversations", "get_token"]:
-    print("Wrong option. Use archiver --help for more information")
-
-
-if action == "get_token" and token == "?":
+def get_token():
     print("Go to %s" % Me.get_token_uri())
     exit(0)
+
+parser = argparse.ArgumentParser(description='Facebook message archiving tool.')
+
+parser.add_argument("--token", help="Token for using while accessing facebook private data")
+parser.add_argument("--person", help="Person name for processing")
+parser.add_argument("--output", help="Output file for storing messages to")
+parser.add_argument("--action", choices=["log", "list", "token"], required=True, help="Action to take")
+
+args = parser.parse_args()
+
+token = args.token
+action = args.action
+
 me = Me(token)
 
-# show-conversations option 
-if action == "show-conversations":      
+if action == "token":
+    get_token()
+
+if action == "list":      
     inbox = me.get_inbox()
     while inbox.has_next():
         for conversation in inbox.get_conversations():
             print(conversation)
         inbox = inbox.next()
-
     exit(0)
 
 
 # log option
-person = sys.argv[3] 
-output_filename = sys.argv[4]
-
+person = args.person
+output_filename = args.output
+print("Starting gathering information...")
 inbox = me.get_inbox()
 
 available_targets = []
