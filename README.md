@@ -6,7 +6,7 @@ How to configure
 First register app on your facebook account. By doing that you'll get app id. Also you'll need to setup redirect URL to localhost to 
 application can work properly. 
 
-Rename facebook/template.py.template to facebook/template.py and fill in APP ID 
+Rename template.py.template to template.py and fill in APP ID 
 
 then you need to get token by using 
 

@@ -3,12 +3,13 @@ import sys
 import time
 import argparse
 
+from template import * 
 
-from facebook.me import Me
-from facebook.exceptions import LimitExceededException
+from pyfacebook.me import Me
+from pyfacebook.exceptions import LimitExceededException
 
 def get_token():
-    print("Go to %s" % Me.get_token_uri())
+    print("Go to %s" % Me.get_token_uri(APP_ID, "read_mailbox"))
     exit(0)
 
 parser = argparse.ArgumentParser(description='Facebook message archiving tool.')
