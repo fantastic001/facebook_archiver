@@ -8,6 +8,8 @@ from template import *
 from pyfacebook.me import Me
 from pyfacebook.exceptions import LimitExceededException
 
+from exporters import * 
+
 def get_token():
     print("Go to %s" % Me.get_token_uri(APP_ID, "read_mailbox"))
     exit(0)
@@ -98,9 +100,9 @@ start = time.time()
 #       print conversation
 #       conversation = get_prev_page(conversation) 
 
-output = open(output_filename, "w")
+exporter = TextExporter(output_filename)
 
 for msg in msgs:
-    output.write(msg.get_time().strftime("%Y %m %d %H:%M ") + msg.get_sender() + ": " + msg.get_message() + "\n")
+    exporter.print_message(msg)
 
 print("Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds")
