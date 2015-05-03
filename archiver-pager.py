@@ -20,8 +20,13 @@ parser.add_argument("--token", help="Token for using while accessing facebook pr
 parser.add_argument("--person", help="Person name for processing")
 parser.add_argument("--output", help="Output file for storing messages to")
 parser.add_argument("--action", choices=["log", "list", "token"], required=True, help="Action to take")
-
+parser.add_argument("--export", choices=["text", "latex"], default="text", help="Select export format")
 args = parser.parse_args()
+
+exporter_labels = {
+    "text": TextExporter, 
+    "latex": LatexExporter
+}
 
 token = args.token
 action = args.action
@@ -69,6 +74,7 @@ else:
     else:
         target = available_targets[0]
 
+
 start = time.time()
 
 msgs = [] 
@@ -100,9 +106,9 @@ start = time.time()
 #       print conversation
 #       conversation = get_prev_page(conversation) 
 
-exporter = TextExporter(output_filename)
-
+exporter = exporter_labels[args.export](output_filename)
 for msg in msgs:
     exporter.print_message(msg)
+exporter.finish()
 
 print("Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds")
