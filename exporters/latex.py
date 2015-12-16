@@ -1,8 +1,8 @@
 
-from .exporter import * 
+from .file import * 
 
-class LatexExporter(Exporter):
-    def on_start(self):
+class LatexExporter(FileExporter):
+    def on_start(self, **params):
         s = ""
         s += r"\documentclass{memoir}" + "\n"
         s += r"\usepackage[utf8]{inputenc}" + "\n"
@@ -15,15 +15,15 @@ class LatexExporter(Exporter):
         s += r"\newpage" + "\n"
 
         s += r"\section{Messages}" + "\n"
-        return s
+        self.f.write(s)
 
     def on_end(self):
         s = ""
         s += "\n"
         s += "\end{document}"
-        return s
+        self.f.write(s)
 
-    def on_message(self, message):
+    def print_message(self, message):
         s = r"%s - %s: %s " % (message.get_time().strftime("%Y %m %d %H:%M "), message.get_sender(), message.get_message()) 
         s += "\n\n\n"
         return s

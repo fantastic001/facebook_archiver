@@ -106,9 +106,9 @@ start = time.time()
 #       print conversation
 #       conversation = get_prev_page(conversation) 
 
-exporter = exporter_labels[args.export](output_filename)
+exporter = exporter_labels[args.export](filename=output_filename)
 for msg in msgs:
-    exporter.print_message(msg)
+    exporter.on_message(msg)
 exporter.finish()
 
 print("Processed " + str(len(msgs)) + " in " + str(time.time() - start) + " seconds")

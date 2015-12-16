@@ -4,21 +4,13 @@ class Exporter(object):
     Basic abstract exporter for using as base class for specific exporters 
     """
     
-    def __init__(self, filename):
-        self.f = open(filename, "w")
-        self.f.write(self.on_start())
-
+    def __init__(self, **params):
+        self.on_start(**params)
+    
     def finish(self):
-        self.f.write(self.on_end())
-        self.f.close()
+        self.on_end()
 
-    def print_message(self, message):
-        """
-        Method for printing messages, uses Exporter.onMessage method 
-        """
-        self.f.write(self.on_message(message))
-
-    def on_start(self):
+    def on_start(self, **params):
         """
         Called when exporter is made
         """
@@ -32,6 +24,6 @@ class Exporter(object):
 
     def on_message(self, message):
         """
-        Should return a string for printing
+        Called when processing specific message
         """
         pass
