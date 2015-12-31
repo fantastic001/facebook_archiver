@@ -2,6 +2,7 @@
 import sys
 import time
 import argparse
+import urllib.parse
 
 from template import *
 
@@ -14,6 +15,19 @@ from datetime import datetime
 
 def get_token():
     print("Go to %s" % Me.get_token_uri(APP_ID, "read_mailbox"))
+    print("Copy given URL here, first accept permissions if needed") 
+    token_url = input("Given URL in the browser window: ")
+    q = urllib.parse.urlparse(token_url).fragment
+    tokens = urllib.parse.parse_qs(q).get("access_token", [])
+    print(q)
+    print("Given %d tokens" % len(tokens)) 
+    if len(tokens) == 1:
+        print()
+        print("________________________")
+        print("USE THIS AS YOUR TOKEN")
+        print("________________________")
+        print()
+        print(tokens[0])
     exit(0)
 
 parser = argparse.ArgumentParser(description='Facebook message archiving tool.')
