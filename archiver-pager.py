@@ -6,8 +6,8 @@ import urllib.parse
 
 from template import *
 
-from pyfacebook.me import Me
-from pyfacebook.exceptions import LimitExceededException
+from interfaces.api import APIMe
+from pyfacebook import LimitExceededException
 
 from exporters import *
 
@@ -54,7 +54,7 @@ after = None
 if args.after != None:
     after = datetime.strptime(args.after, "%Y-%m-%dT%H:%M:%S%z")
 
-me = Me(token)
+me = APIMe(token)
 
 if action == "token":
     get_token()
