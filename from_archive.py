@@ -50,6 +50,57 @@ class Message(object):
     def get_time(self):
         return self.time
 
+
+class ArchiveParser(object):
+    
+    def __init__(self, source):
+        self.source = source
+        f = open("%s/html/messages.htm" % self.source, "r")
+        self.doc = f.read()
+        f.close()
+        self.soup = soup = BeautifulSoup(self.doc, 'html.parser')
+        self.threads = self.soup.find_all(class_="thread")
+
+    def get_list(self):
+        res = []    
+        for thread in self.threads:
+            for child in thread.children:
+                res.append(child)
+                break
+        return res
+
+    def get_candidates(self, person):
+        """
+        Returns list of candidates.
+
+        Every element is a dictionary with 'thread' and 'name' fields.
+        """
+        candidates = []
+        for thread in self.threads:
+            name = ""
+            for child in thread.children:
+                name = child
+                break
+            if person in name:
+                candidates.append({"thread": thread, "name": name})
+        return candidates
+
+    def export_messages(self, target, exporter):
+        """
+        target: thread from candidates, it can be accessed as candidates[i]['thread']
+        """
+        messages = []
+        for c in target.contents:
+            if not isinstance(c, NavigableString) and "class" in c.attrs.keys() and "message" in c["class"]:
+                messages.append(Message(c.find(class_="user").text, c.find(class_="meta").text))
+            else:
+                if len(messages) > 0:
+                    messages[-1].add_content(c.text)
+        for m in messages[::-1]:
+            exporter.on_message(m)
+        exporter.finish()
+
+
 parser = argparse.ArgumentParser(description='Facebook archive reader.')
 
 parser.add_argument("--source", help="Directory where archive is held")
@@ -64,24 +115,12 @@ parser.add_argument("--export", choices=["text", "latex"], default="text", help=
 args = parser.parse_args()
 action = args.action
 
-print("Openning file")
-f = open("%s/html/messages.htm" % args.source, "r")
-print("Reading file")
-html_doc = f.read()
-f.close()
-
-
-print("Parsing")
-soup = BeautifulSoup(html_doc, 'html.parser')
-
-print("Reading threads")
-threads = soup.find_all(class_="thread")
+parser = ArchiveParser(args.source)
 
 if action == "list":
-    for thread in threads:
-        for child in thread.children:
-            print(child)
-            break
+    l = parser.get_list()
+    for ll in l:
+        print(ll)
 elif action == "log":
     person = args.person
     output = args.output
@@ -90,15 +129,8 @@ elif action == "log":
         "text": TextExporter
     }
     exporter = exporters[args.export](filename=output)
-    print("Finding given person")
-    candidates = []
-    for thread in threads:
-        name = ""
-        for child in thread.children:
-            name = child
-            break
-        if person in name:
-            candidates.append({"thread": thread, "name": name})
+    print("Collecting candidates...")
+    candidates = parser.get_candidates(person)
     target = None
     if len(candidates) == 0:
         print("Person not found")
@@ -113,15 +145,6 @@ elif action == "log":
         target = candidates[int(choice)-1]["thread"]
     else:
         target = candidates[0]["thread"]
-    messages = []
-    for c in target.contents:
-        print(c)
-        if not isinstance(c, NavigableString) and "class" in c.attrs.keys() and "message" in c["class"]:
-            messages.append(Message(c.find(class_="user").text, c.find(class_="meta").text))
-        else:
-            if len(messages) > 0:
-                messages[-1].add_content(c.text)
-    for m in messages[::-1]:
-        print("Exporting message: %s" % str(m))
-        exporter.on_message(m)
-    exporter.finish()
+    print("Exporting messages...")
+    parser.export_messages(target, exporter)
+
