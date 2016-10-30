@@ -101,50 +101,51 @@ class ArchiveParser(object):
         exporter.finish()
 
 
-parser = argparse.ArgumentParser(description='Facebook archive reader.')
-
-parser.add_argument("--source", help="Directory where archive is held")
-parser.add_argument("--person", help="Person name for processing")
-parser.add_argument("--output", help="Output file for storing messages to")
-parser.add_argument("--action", choices=["log", "list"], required=True, help="Action to take")
-parser.add_argument("--export", choices=["text", "latex"], default="text", help="Select export format")
-#parser.add_argument("--after",
-#                    help="Specify date which is last considered date, format is e.g. 2015-01-01T00:00:00+0000",
-#                    required=False
-#                    )
-args = parser.parse_args()
-action = args.action
-
-parser = ArchiveParser(args.source)
-
-if action == "list":
-    l = parser.get_list()
-    for ll in l:
-        print(ll)
-elif action == "log":
-    person = args.person
-    output = args.output
-    exporters = {
-        "latex": LatexExporter,
-        "text": TextExporter
-    }
-    exporter = exporters[args.export](filename=output)
-    print("Collecting candidates...")
-    candidates = parser.get_candidates(person)
-    target = None
-    if len(candidates) == 0:
-        print("Person not found")
-        exit(1)
-    elif len(candidates) > 1:
-        print("You have multiple candidates, select one of them")
-        i = 0
-        for c in candidates:
-            print("%d: %s" % (i+1, c["name"]))
-            i += 1
-        choice = input(">>> ")
-        target = candidates[int(choice)-1]["thread"]
-    else:
-        target = candidates[0]["thread"]
-    print("Exporting messages...")
-    parser.export_messages(target, exporter)
-
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Facebook archive reader.')
+	
+	parser.add_argument("--source", help="Directory where archive is held")
+	parser.add_argument("--person", help="Person name for processing")
+	parser.add_argument("--output", help="Output file for storing messages to")
+	parser.add_argument("--action", choices=["log", "list"], required=True, help="Action to take")
+	parser.add_argument("--export", choices=["text", "latex"], default="text", help="Select export format")
+	#parser.add_argument("--after",
+	#                    help="Specify date which is last considered date, format is e.g. 2015-01-01T00:00:00+0000",
+	#                    required=False
+	#                    )
+	args = parser.parse_args()
+	action = args.action
+	
+	parser = ArchiveParser(args.source)
+	
+	if action == "list":
+	    l = parser.get_list()
+	    for ll in l:
+	        print(ll)
+	elif action == "log":
+	    person = args.person
+	    output = args.output
+	    exporters = {
+	        "latex": LatexExporter,
+	        "text": TextExporter
+	    }
+	    exporter = exporters[args.export](filename=output)
+	    print("Collecting candidates...")
+	    candidates = parser.get_candidates(person)
+	    target = None
+	    if len(candidates) == 0:
+	        print("Person not found")
+	        exit(1)
+	    elif len(candidates) > 1:
+	        print("You have multiple candidates, select one of them")
+	        i = 0
+	        for c in candidates:
+	            print("%d: %s" % (i+1, c["name"]))
+	            i += 1
+	        choice = input(">>> ")
+	        target = candidates[int(choice)-1]["thread"]
+	    else:
+	        target = candidates[0]["thread"]
+	    print("Exporting messages...")
+	    parser.export_messages(target, exporter)
+	
